@@ -16,6 +16,7 @@ pub fn display_menu() {
     println!("2. Decrypt");
     println!("3. Exit");
 
+    println!("Enter your choice:");
     let choice = get_input();
 
     let choice: i32 = match choice.parse() {
