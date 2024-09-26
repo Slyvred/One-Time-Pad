@@ -18,7 +18,6 @@ This is a simple implementation of the One Time Pad encryption algorithm. The On
 - Build the project with `cargo build --release`
 - Run the program (with `cargo run --release`)
 
-## Usage
 ### Encrypting a file
 ```shell
 1. Encrypt
