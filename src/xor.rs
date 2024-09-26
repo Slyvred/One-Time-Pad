@@ -93,4 +93,10 @@ pub fn decrypt() {
     // Write to file
     write_file(decrypted_data, &path);
     println!("File decrypted successfully!");
+
+    // Delete pad file
+    match std::fs::remove_file(&pad_path) {
+        Ok(_) => (),
+        Err(_) => println!("Failed to delete pad file!")
+    }
 }
