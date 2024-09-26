@@ -51,4 +51,3 @@ File decrypted successfully!
 ## Disclaimer
 This implementation is for educational purposes only. Do not use it to encrypt sensitive data as I am not a cryptographer and I cannot guarantee the security of this implementation.
 I am not responsible for any misuse of this software.
-```
