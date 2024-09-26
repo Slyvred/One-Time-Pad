@@ -1,5 +1,5 @@
 use std::fs::File;
-use rand::random;
+use rand::{rngs::OsRng, TryRngCore};
 use crate::helpers::{get_input, read_file, write_file};
 
 pub fn encrypt() {
@@ -41,12 +41,15 @@ pub fn encrypt() {
     println!("File encrypted successfully!");
 }
 
-pub fn gen_pad(file_size : u64) -> Vec<u8> {
-    let mut pad: Vec<u8> = Vec::new();
-    for _ in 0..file_size {
-        pad.push(random());
+pub fn gen_pad(file_size: u64) -> Vec<u8> {
+    let mut pad = vec![0u8; file_size as usize];
+    match OsRng.try_fill_bytes(&mut pad) {
+        Ok(_) => pad,
+        Err(_) => {
+            println!("Failed to generate pad!");
+            Vec::new()
+        }
     }
-    pad
 }
 
 pub fn decrypt() {
