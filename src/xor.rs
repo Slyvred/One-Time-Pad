@@ -18,6 +18,13 @@ pub fn encrypt(file: &str) {
         }
     };
 
+    // Check if there is already a pad file
+    let pad_path = path.clone() + ".pad";
+    if File::open(&pad_path).is_ok() {
+        println!("Pad file already exists!, which means the file is likely already encrypted!");
+        return;
+    }
+
     // Gen Pad
     println!("Generating pad...");
     let file_size = file.metadata().unwrap().len();
