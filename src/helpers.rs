@@ -1,12 +1,14 @@
+use crate::xor::{decrypt, encrypt};
 use std::fs::File;
 use std::io;
 use std::io::{BufReader, Read, Write};
 use std::process::exit;
-use crate::xor::{decrypt, encrypt};
 
 pub fn get_input() -> String {
     let mut input = String::new();
-    io::stdin().read_line(&mut input).expect("Failed to read input");
+    io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read input");
 
     input.trim().to_string()
 }
@@ -29,8 +31,8 @@ pub fn display_menu() {
     };
 
     match choice {
-        1 => encrypt(),
-        2 => decrypt(),
+        1 => encrypt(""),
+        2 => decrypt(""),
         3 => exit(0),
         _ => {
             println!("Invalid choice!");

@@ -1,10 +1,13 @@
-use std::fs::File;
-use rand::{rngs::OsRng, TryRngCore};
 use crate::helpers::{get_input, read_file, write_file};
+use rand::{rngs::OsRng, TryRngCore};
+use std::fs::File;
 
-pub fn encrypt() {
-    println!("Enter the path of the file to encrypt:");
-    let path = get_input();
+pub fn encrypt(file: &str) {
+    let mut path = file.to_string();
+    if file.is_empty() {
+        println!("Enter the path of the file to encrypt:");
+        path = get_input();
+    }
 
     // Check if the file exists
     let file = match File::open(&path) {
@@ -52,9 +55,12 @@ pub fn gen_pad(file_size: u64) -> Vec<u8> {
     }
 }
 
-pub fn decrypt() {
-    println!("Enter the path of the file to decrypt:");
-    let path = get_input();
+pub fn decrypt(file: &str) {
+    let mut path = file.to_string();
+    if file.is_empty() {
+        println!("Enter the path of the file to decrypt:");
+        path = get_input();
+    }
 
     // Check if the file exists
     let _ = match File::open(&path) {
@@ -97,6 +103,6 @@ pub fn decrypt() {
     // Delete pad file
     match std::fs::remove_file(&pad_path) {
         Ok(_) => (),
-        Err(_) => println!("Failed to delete pad file!")
+        Err(_) => println!("Failed to delete pad file!"),
     }
 }
