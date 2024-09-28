@@ -4,7 +4,7 @@ use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Read, Write};
 use std::process::exit;
 
-pub fn encrypt(file_path: &str) {
+pub fn encrypt(file_path: &str, delete_original: bool) {
     let mut path = file_path.to_string();
     if file_path.is_empty() {
         println!("Enter the path of the file to encrypt:");
@@ -61,6 +61,13 @@ pub fn encrypt(file_path: &str) {
     }
 
     println!("File encrypted successfully!");
+
+    if delete_original {
+        match std::fs::remove_file(&path) {
+            Ok(_) => print!("Original file deleted!"),
+            Err(_) => println!("Failed to delete original file!"),
+        }
+    }
 }
 
 pub fn gen_pad(file_size: u64) -> Vec<u8> {

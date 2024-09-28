@@ -11,8 +11,7 @@ This is a simple implementation of the One Time Pad encryption algorithm. The On
 ## Disadvantages of the One Time Pad
 - The key must be as long as the message to encrypt, which makes it impractical with bigger files.
 - The key must be **_truly_** random, which is hard to achieve in practice.
-- The key must be kept secret
-- The key must be used only once
+- The key must be kept secret and be used only once
 
 ## Usage
 - Build the project with `cargo build --release`

@@ -4,26 +4,25 @@ mod helpers;
 mod xor;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let mut args: Vec<String> = env::args().collect();
+    args.remove(0); // Remove the first argument because we find the path by checking for the first argument that doesn't start with "--"
 
     match args.len() {
-        3 => {
-            let mode = &args[1];
-            let file = &args[2];
-
-            match mode.as_str() {
-                "--encrypt" => xor::encrypt(file),
-                "--decrypt" => xor::decrypt(file),
-                _ => println!("Invalid mode"),
-            }
-        }
-        1 => {
-            helpers::display_menu();
-        }
+        0 => helpers::display_menu(),
         _ => {
-            println!("Invalid arguments!");
-            print!("Usage: ");
-            println!("./one_time_pad --encrypt <file> | --decrypt <file>");
+            let path = args.iter().find(|&arg| !arg.starts_with("--"));
+
+            if args.iter().find(|&arg| arg == "--encrypt").is_some() {
+                // Check if the user has provided a delete flag
+                xor::encrypt(path.unwrap().as_str(), args.iter().find(|&arg| arg == "--delete").is_some());
+            }
+            else if args.iter().find(|&arg| arg == "--decrypt").is_some() {
+                xor::decrypt(path.unwrap().as_str());
+            }
+            else {
+                println!("Invalid arguments!");
+                println!("Usage: ./one_time_pad --encrypt (--delete) <file> | --decrypt <file>");
+            }
         }
     }
 }
