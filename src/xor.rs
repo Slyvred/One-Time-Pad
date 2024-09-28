@@ -1,6 +1,7 @@
 use crate::helpers::{get_input, read_file, write_file};
 use rand::{rngs::OsRng, TryRngCore};
 use std::fs::File;
+use std::process::exit;
 
 pub fn encrypt(file: &str) {
     let mut path = file.to_string();
@@ -8,6 +9,9 @@ pub fn encrypt(file: &str) {
         println!("Enter the path of the file to encrypt:");
         path = get_input();
     }
+
+    // Remove quotes from path
+    path = path.replace(['\"', '\''], "");
 
     // Check if the file exists
     let file = match File::open(&path) {
@@ -57,7 +61,7 @@ pub fn gen_pad(file_size: u64) -> Vec<u8> {
         Ok(_) => pad,
         Err(_) => {
             println!("Failed to generate pad!");
-            Vec::new()
+            exit(1);
         }
     }
 }
@@ -68,6 +72,9 @@ pub fn decrypt(file: &str) {
         println!("Enter the path of the file to decrypt:");
         path = get_input();
     }
+
+    // Remove quotes from path
+    path = path.replace(['\"', '\''], "");
 
     // Check if the file exists
     let _ = match File::open(&path) {
@@ -107,9 +114,14 @@ pub fn decrypt(file: &str) {
     write_file(decrypted_data, &path);
     println!("File decrypted successfully!");
 
+    // Fill pad with zeros, as fs::remove_file does not actually delete the file depending on the platform
+    println!("Filling pad with zeros...");
+    let zeros = vec![0u8; pad.len()];
+    write_file(zeros, &pad_path);
+
     // Delete pad file
     match std::fs::remove_file(&pad_path) {
-        Ok(_) => (),
+        Ok(_) => print!("Pad file deleted!"),
         Err(_) => println!("Failed to delete pad file!"),
     }
 }
