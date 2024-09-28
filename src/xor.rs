@@ -32,8 +32,8 @@ pub fn encrypt(file_path: &str) {
 
     println!("Encrypting file...");
 
-    // Read file and pad by chunks of 512 MB
-    let buffer_size = 512000000;
+    // Read file and pad by chunks of 256 MB
+    let buffer_size = 256_000_000;
     let mut reader = BufReader::new(&file);
     let mut buffer = vec![0u8; buffer_size as usize];
 
@@ -76,6 +76,7 @@ pub fn gen_pad(file_size: u64) -> Vec<u8> {
 
 pub fn decrypt(file_path: &str) {
     let mut path = file_path.to_string();
+
     if file_path.is_empty() {
     println!("Enter the path of the file to decrypt:");
         path = get_input();
@@ -105,8 +106,8 @@ pub fn decrypt(file_path: &str) {
 
     println!("Decrypting file...");
 
-    // Read file and pad by chunks of 512 MB
-    let buffer_size = 512000000;
+    // Read file and pad by chunks of 256 MB
+    let buffer_size = 256_000_000;
     let mut reader = BufReader::new(&file);
     let mut buffer = vec![0u8; buffer_size as usize];
 
@@ -133,7 +134,7 @@ pub fn decrypt(file_path: &str) {
         decrypted_file.write_all(&decrypted_data).unwrap();
     }
 
-    println!("File encrypted successfully!");
+    println!("File decrypted successfully!");
 
     // Fill pad with zeros, as fs::remove_file does not actually delete the file depending on the platform
     println!("Filling pad with zeros...");
