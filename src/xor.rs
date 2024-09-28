@@ -3,9 +3,9 @@ use rand::{rngs::OsRng, TryRngCore};
 use std::fs::File;
 use std::process::exit;
 
-pub fn encrypt(file: &str) {
-    let mut path = file.to_string();
-    if file.is_empty() {
+pub fn encrypt(file_path: &str) {
+    let mut path = file_path.to_string();
+    if file_path.is_empty() {
         println!("Enter the path of the file to encrypt:");
         path = get_input();
     }
@@ -66,9 +66,9 @@ pub fn gen_pad(file_size: u64) -> Vec<u8> {
     }
 }
 
-pub fn decrypt(file: &str) {
-    let mut path = file.to_string();
-    if file.is_empty() {
+pub fn decrypt(file_path: &str) {
+    let mut path = file_path.to_string();
+    if file_path.is_empty() {
         println!("Enter the path of the file to decrypt:");
         path = get_input();
     }

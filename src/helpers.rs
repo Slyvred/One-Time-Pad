@@ -42,8 +42,22 @@ pub fn display_menu() {
 }
 
 pub fn write_file(data: Vec<u8>, path: &String) {
-    let mut file = File::create(path).unwrap();
-    file.write_all(&data).unwrap();
+    // Check if the file exists / if we can open it
+    let mut file = match File::create(path) {
+        Ok(file) => file,
+        Err(_) => {
+            println!("Failed to create/open the file!");
+            exit(1);
+        }
+    };
+
+    match file.write_all(&data) {
+        Ok(_) => (),
+        Err(_) => {
+            println!("Failed to write to the file!");
+            exit(1);
+        }
+    }
 }
 
 pub fn read_file(path: &String) -> Vec<u8> {
