@@ -1,7 +1,7 @@
 use crate::xor::{decrypt, encrypt};
 use std::fs::File;
 use std::io;
-use std::io::{BufReader, Read, Write};
+use std::io::{/*BufReader, Read,*/ Write};
 use std::process::exit;
 
 pub fn get_input() -> String {
@@ -18,7 +18,7 @@ pub fn display_menu() {
     println!("2. Decrypt");
     println!("3. Exit");
 
-    println!("Enter your choice:");
+    println!("Enter your choice: ");
     let choice = get_input();
 
     let choice: i32 = match choice.parse() {
@@ -41,7 +41,7 @@ pub fn display_menu() {
     }
 }
 
-pub fn write_file(data: Vec<u8>, path: &String) {
+pub fn write_file(data: &Vec<u8>, path: &String) {
     // Check if the file exists / if we can open it
     let mut file = match File::create(path) {
         Ok(file) => file,
@@ -60,7 +60,7 @@ pub fn write_file(data: Vec<u8>, path: &String) {
     }
 }
 
-pub fn read_file(path: &String) -> Vec<u8> {
+/*pub fn read_file(path: &String) -> Vec<u8> {
     let mut buf = BufReader::new(File::open(path).unwrap());
 
     let mut data: Vec<u8> = Vec::new();
@@ -72,4 +72,4 @@ pub fn read_file(path: &String) -> Vec<u8> {
             Vec::new()
         }
     }
-}
+}*/
