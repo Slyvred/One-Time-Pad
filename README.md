@@ -32,6 +32,10 @@ Reading file...
 Encrypting file...
 File encrypted successfully!
 ```
+Or
+```shell
+./one_time_pad --encrypt <file>
+```
 
 ### Decrypting a file
 ```shell
@@ -45,6 +49,10 @@ Enter the path of the file to decrypt: example.bin
 Reading file...
 Decrypting file...
 File decrypted successfully!
+```
+Or
+```shell
+./one_time_pad --decrypt <file>
 ```
 
 ## Disclaimer
