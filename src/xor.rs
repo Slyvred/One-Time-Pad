@@ -85,7 +85,7 @@ pub fn decrypt(file_path: &str) {
     let mut path = file_path.to_string();
 
     if file_path.is_empty() {
-    println!("Enter the path of the file to decrypt:");
+        println!("Enter the path of the file to decrypt:");
         path = get_input();
     }
 
