@@ -36,6 +36,14 @@ Or
 ./one_time_pad --encrypt <file>
 ```
 
+#### Optionnal arguments:
+- `--dir`: Recursively encrypt all files in the directory
+- `--delete`: Delete the original file after encryption
+##### Example:
+```shell
+./one_time_pad --encrypt --dir --delete <folder>
+```
+
 ### Decrypting a file
 ```shell
 1. Encrypt
@@ -54,6 +62,14 @@ Or
 ./one_time_pad --decrypt <file>
 ```
 
+#### Optionnal arguments:
+- `--dir`: Recursively decrypt all files in the directory
+- `--secure`: Fills the pad with zeros before deleting it
+##### Example:
+```shell
+./one_time_pad --decrypt --dir --secure <folder>
+```
+
 ## Disclaimer
-This implementation is for educational purposes only. Do not use it to encrypt sensitive data as I am not a cryptographer and I cannot guarantee the security of this implementation.
+This implementation is for educational purposes only. **Do not use it to encrypt sensitive data** as I am not a cryptographer and I cannot guarantee the security of this implementation.
 I am not responsible for any misuse of this software.

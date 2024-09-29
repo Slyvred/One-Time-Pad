@@ -4,7 +4,7 @@ use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Read, Write};
 use std::process::exit;
 
-pub fn encrypt(file_path: &str, delete_original: bool) {
+pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
     let mut path = file_path.to_string();
     if file_path.is_empty() {
         println!("Enter the path of the file to encrypt:");
@@ -18,7 +18,9 @@ pub fn encrypt(file_path: &str, delete_original: bool) {
     let file = match File::open(&path) {
         Ok(file) => file,
         Err(_) => {
-            println!("File not found!");
+            if !quiet {
+                println!("File not found!");
+            }
             return;
         }
     };
@@ -30,7 +32,9 @@ pub fn encrypt(file_path: &str, delete_original: bool) {
         return;
     }
 
-    println!("Encrypting file...");
+    if !quiet {
+        println!("Encrypting file...");
+    }
 
     // Read file and pad by chunks of 256 MB
     let buffer_size = 256_000_000;
@@ -60,28 +64,59 @@ pub fn encrypt(file_path: &str, delete_original: bool) {
         pad_file.write_all(&pad).unwrap();
     }
 
-    println!("File encrypted successfully!");
+    if !quiet {
+        println!("File encrypted successfully!");
+    }
 
     if delete_original {
         match std::fs::remove_file(&path) {
-            Ok(_) => print!("Original file deleted!"),
-            Err(_) => println!("Failed to delete original file!"),
+            Ok(_) => {
+                if !quiet {
+                    print!("Original file deleted!")
+                }
+            },
+            Err(_) => {
+                if !quiet {
+                    println!("Failed to delete original file!")
+                }
+            },
         }
     }
 }
 
-pub fn gen_pad(file_size: u64) -> Vec<u8> {
-    let mut pad = vec![0u8; file_size as usize];
-    match OsRng.try_fill_bytes(&mut pad) {
-        Ok(_) => pad,
+pub fn encrypt_directory(directory_path: &str, delete_original: bool) {
+    let mut path = directory_path.to_string();
+    if directory_path.is_empty() {
+        println!("Enter the path of the directory to encrypt:");
+        path = get_input();
+    }
+
+    // Remove quotes from path
+    path = path.replace(['\"', '\''], "");
+
+    // Check if the folder exists
+    let dir = match std::fs::read_dir(&path) {
+        Ok(dir) => dir,
         Err(_) => {
-            println!("Failed to generate pad!");
-            exit(1);
+            println!("Directory not found!");
+            return;
+        }
+    };
+
+    for entry in dir {
+        let entry = entry.unwrap();
+        let file_path = entry.path().to_str().unwrap().to_string();
+
+        // If it's a directory, encrypt it recursively
+        if entry.file_type().unwrap().is_dir() {
+            encrypt_directory(&file_path, delete_original);
+        } else {
+            encrypt(&file_path, delete_original, true);
         }
     }
 }
 
-pub fn decrypt(file_path: &str) {
+pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
     let mut path = file_path.to_string();
 
     if file_path.is_empty() {
@@ -96,7 +131,9 @@ pub fn decrypt(file_path: &str) {
     let file = match File::open(&path) {
         Ok(file) => file,
         Err(_) => {
-            println!("File not found!");
+            if !quiet {
+                println!("File not found!");
+            }
             return;
         }
     };
@@ -106,12 +143,16 @@ pub fn decrypt(file_path: &str) {
     let pad_file = match File::open(&pad_path) {
         Ok(file) => file,
         Err(_) => {
-            println!("Pad file not found!");
+            if !quiet {
+                println!("Pad file not found!");
+            }
             return;
         }
     };
 
-    println!("Decrypting file...");
+    if !quiet {
+        println!("Decrypting file...");
+    }
 
     // Read file and pad by chunks of 256 MB
     let buffer_size = 256_000_000;
@@ -141,22 +182,88 @@ pub fn decrypt(file_path: &str) {
         decrypted_file.write_all(&decrypted_data).unwrap();
     }
 
-    println!("File decrypted successfully!");
+    if !quiet {
+        println!("File decrypted successfully!");
+    }
 
     // Fill pad with zeros, as fs::remove_file does not actually delete the file depending on the platform
-    println!("Filling pad with zeros...");
-    let zeros = vec![0u8; pad_file.metadata().unwrap().len() as usize];
-    write_file(&zeros, &pad_path);
+    if !quiet {
+        println!("Filling pad with zeros...");
+    }
+
+    if secure_delete {
+        let zeros = vec![0u8; pad_file.metadata().unwrap().len() as usize];
+        write_file(&zeros, &pad_path);
+    }
 
     // Delete pad file
     match std::fs::remove_file(&pad_path) {
-        Ok(_) => print!("Pad file deleted! "),
-        Err(_) => println!("Failed to delete pad file!"),
+        Ok(_) => {
+            if !quiet {
+                print!("Pad file deleted! ")
+            }
+        },
+        Err(_) => {
+            if !quiet {
+                println!("Failed to delete pad file!")
+            }
+        },
     }
 
     // Delete encrypted file
     match std::fs::remove_file(&path) {
-        Ok(_) => print!("Encrypted file deleted!"),
-        Err(_) => println!("Failed to delete encrypted file!"),
+        Ok(_) => {
+            if !quiet {
+                print!("Encrypted file deleted!")
+            }
+        },
+        Err(_) => {
+            if !quiet {
+                println!("Failed to delete encrypted file!")
+            }
+        },
+    }
+}
+
+pub fn decrypt_directory(directory_path: &str, secure_delete: bool) {
+    let mut path = directory_path.to_string();
+    if directory_path.is_empty() {
+        println!("Enter the path of the directory to decrypt:");
+        path = get_input();
+    }
+
+    // Remove quotes from path
+    path = path.replace(['\"', '\''], "");
+
+    // Check if the folder exists
+    let dir = match std::fs::read_dir(&path) {
+        Ok(dir) => dir,
+        Err(_) => {
+            println!("Directory not found!");
+            return;
+        }
+    };
+
+    for entry in dir {
+        let entry = entry.unwrap();
+        let file_path = entry.path().to_str().unwrap().to_string();
+
+        // If it's a directory, decrypt it recursively
+        if entry.file_type().unwrap().is_dir() {
+            decrypt_directory(&file_path, secure_delete);
+        } else {
+            decrypt(&file_path, true, secure_delete);
+        }
+    }
+}
+
+pub fn gen_pad(file_size: u64) -> Vec<u8> {
+    let mut pad = vec![0u8; file_size as usize];
+    match OsRng.try_fill_bytes(&mut pad) {
+        Ok(_) => pad,
+        Err(_) => {
+            println!("Failed to generate pad!");
+            exit(1);
+        }
     }
 }

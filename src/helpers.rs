@@ -35,15 +35,26 @@ pub fn display_menu() {
             println!("Do you want to delete the original file after encryption? (y/n)");
             let delete_original = get_input();
             match delete_original.as_str() {
-                "y" => encrypt("", true),
-                "n" => encrypt("", false),
+                "y" => encrypt("", true, false),
+                "n" => encrypt("", false, false),
                 _ => {
                     println!("Invalid choice!");
                     display_menu();
                 }
             }
         },
-        2 => decrypt(""),
+        2 => {
+            println!("Do you want to securely delete the original file after decryption? (y/n)");
+            let secure_delete = get_input();
+            match secure_delete.as_str() {
+                "y" => decrypt("", false, true),
+                "n" => decrypt("", false, false),
+                _ => {
+                    println!("Invalid choice!");
+                    display_menu();
+                }
+            }
+        },
         3 => exit(0),
         _ => {
             println!("Invalid choice!");

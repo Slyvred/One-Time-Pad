@@ -4,25 +4,41 @@ mod helpers;
 mod xor;
 
 fn main() {
-    let mut args: Vec<String> = env::args().collect();
-    args.remove(0); // Remove the first argument because we find the path by checking for the first argument that doesn't start with "--"
+    let args: Vec<String> = env::args().skip(1).collect();
 
-    match args.len() {
-        0 => helpers::display_menu(),
+    if args.is_empty() {
+        helpers::display_menu();
+        return;
+    }
+
+    let path = args.iter().find(|&arg| !arg.starts_with("--")).expect("File path not provided");
+    let delete = args.contains(&"--delete".to_string());
+    let mode = args.iter().find(|&arg| arg == "--encrypt" || arg == "--decrypt").expect("Invalid mode");
+    let dir = args.contains(&"--dir".to_string());
+    let secure_delete = args.contains(&"--secure".to_string());
+
+    match mode.as_str() {
+        "--encrypt" => {
+            if dir {
+                xor::encrypt_directory(path, delete);
+            } else {
+                xor::encrypt(path, delete, false);
+            }
+        },
+        "--decrypt" => {
+            if dir {
+                xor::decrypt_directory(path, secure_delete);
+            } else {
+                xor::decrypt(path, false, secure_delete);
+            }
+        },
         _ => {
-            let path = args.iter().find(|&arg| !arg.starts_with("--"));
-
-            if args.iter().find(|&arg| arg == "--encrypt").is_some() {
-                // Check if the user has provided a delete flag
-                xor::encrypt(path.unwrap().as_str(), args.iter().find(|&arg| arg == "--delete").is_some());
-            }
-            else if args.iter().find(|&arg| arg == "--decrypt").is_some() {
-                xor::decrypt(path.unwrap().as_str());
-            }
-            else {
-                println!("Invalid arguments!");
-                println!("Usage: ./one_time_pad --encrypt (--delete) <file> | --decrypt <file>");
-            }
+            println!("Invalid arguments!");
+            println!("Usage: ./one_time_pad --encrypt <file> | --decrypt <file>");
+            println!("Options:");
+            println!("\t--delete: Delete the original file after encryption");
+            println!("\t--dir: Encrypt/decrypt a directory");
+            println!("\t--secure: Securely delete the original file after decryption (pad file gets filled with zeros)");
         }
     }
 }
