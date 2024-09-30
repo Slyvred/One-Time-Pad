@@ -81,17 +81,3 @@ pub fn write_file(data: &Vec<u8>, path: &String) {
         }
     }
 }
-
-/*pub fn read_file(path: &String) -> Vec<u8> {
-    let mut buf = BufReader::new(File::open(path).unwrap());
-
-    let mut data: Vec<u8> = Vec::new();
-
-    match buf.read_to_end(&mut data) {
-        Ok(_) => data,
-        Err(_) => {
-            println!("Failed to read file!");
-            Vec::new()
-        }
-    }
-}*/

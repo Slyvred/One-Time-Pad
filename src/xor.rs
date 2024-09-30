@@ -187,11 +187,11 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
     }
 
     // Fill pad with zeros, as fs::remove_file does not actually delete the file depending on the platform
-    if !quiet {
-        println!("Filling pad with zeros...");
-    }
-
     if secure_delete {
+        if !quiet {
+            println!("Filling pad with zeros...");
+        }
+
         let zeros = vec![0u8; pad_file.metadata().unwrap().len() as usize];
         write_file(&zeros, &pad_path);
     }
