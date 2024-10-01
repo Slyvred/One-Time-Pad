@@ -42,7 +42,7 @@ pub fn display_menu() {
                     display_menu();
                 }
             }
-        },
+        }
         2 => {
             println!("Do you want to securely delete the original file after decryption? (y/n)");
             let secure_delete = get_input();
@@ -54,7 +54,7 @@ pub fn display_menu() {
                     display_menu();
                 }
             }
-        },
+        }
         3 => exit(0),
         _ => {
             println!("Invalid choice!");
@@ -81,6 +81,7 @@ pub fn write_file(data: &Vec<u8>, path: &String) {
         }
     }
 }
+
 pub fn print_progress_bar(progress: f64, filename: &str) {
     let bar_width = 32;
     let pos = (bar_width as f64 * progress).round() as usize;

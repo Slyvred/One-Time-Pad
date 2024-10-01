@@ -1,10 +1,13 @@
-use crate::helpers::{get_input, write_file, print_progress_bar};
+use crate::helpers::{get_input, print_progress_bar, write_file};
 use rand::{rngs::OsRng, TryRngCore};
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Read, Seek, Write};
 use std::process::exit;
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 const BUFFER_SIZE: u64 = 512_000;
+const NUM_THREADS: u64 = 4;
 
 pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
     let mut path = file_path.to_string();
@@ -60,7 +63,11 @@ pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
         }
 
         // Append to new file
-        let mut encrypted_file = match OpenOptions::new().append(true).create(true).open(path.clone() + ".enc") {
+        let mut encrypted_file = match OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(path.clone() + ".enc")
+        {
             Ok(file) => file,
             Err(_) => {
                 if !quiet {
@@ -71,7 +78,11 @@ pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
         };
         encrypted_file.write_all(&encrypted_data).unwrap();
 
-        let mut pad_file = match OpenOptions::new().append(true).create(true).open(path.clone() + ".enc.pad") {
+        let mut pad_file = match OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(path.clone() + ".enc.pad")
+        {
             Ok(file) => file,
             Err(_) => {
                 if !quiet {
@@ -91,7 +102,10 @@ pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
             }
         }
 
-        print_progress_bar(reader.seek(std::io::SeekFrom::Current(0)).unwrap() as f64 / file_size as f64, &path);
+        print_progress_bar(
+            reader.seek(std::io::SeekFrom::Current(0)).unwrap() as f64 / file_size as f64,
+            &path,
+        );
     }
 
     // Print newline
@@ -107,12 +121,12 @@ pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
                 if !quiet {
                     println!("Original file deleted!")
                 }
-            },
+            }
             Err(_) => {
                 if !quiet {
                     println!("Failed to delete original file!")
                 }
-            },
+            }
         }
     }
 }
@@ -136,16 +150,31 @@ pub fn encrypt_directory(directory_path: &str, delete_original: bool) {
         }
     };
 
-    for entry in dir {
-        let entry = entry.unwrap();
-        let file_path = entry.path().to_str().unwrap().to_string();
+    let entries: Vec<_> = dir.filter_map(Result::ok).collect();
+    let entries = Arc::new(Mutex::new(entries));
 
-        // If it's a directory, encrypt it recursively
-        if entry.file_type().unwrap().is_dir() {
-            encrypt_directory(&file_path, delete_original);
-        } else {
-            encrypt(&file_path, delete_original, true);
-        }
+    let mut handles = vec![];
+
+    for _ in 0..NUM_THREADS {
+        // Number of threads
+        let entries = Arc::clone(&entries);
+        let handle = thread::spawn(move || {
+            while let Some(entry) = entries.lock().unwrap().pop() {
+                let file_path = entry.path().to_str().unwrap().to_string();
+
+                // If it's a directory, encrypt it recursively
+                if entry.file_type().unwrap().is_dir() {
+                    encrypt_directory(&file_path, delete_original);
+                } else {
+                    encrypt(&file_path, delete_original, true);
+                }
+            }
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
     }
 }
 
@@ -212,7 +241,11 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
         // Append to new file
 
         let decrypted_file_path = path.clone().replace(".enc", "");
-        let mut decrypted_file = match OpenOptions::new().append(true).create(true).open(&decrypted_file_path) {
+        let mut decrypted_file = match OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(&decrypted_file_path)
+        {
             Ok(file) => file,
             Err(_) => {
                 if !quiet {
@@ -232,7 +265,10 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
             }
         }
 
-        print_progress_bar(reader.seek(std::io::SeekFrom::Current(0)).unwrap() as f64 / file_size as f64, &path);
+        print_progress_bar(
+            reader.seek(std::io::SeekFrom::Current(0)).unwrap() as f64 / file_size as f64,
+            &path,
+        );
     }
 
     // Print newline
@@ -258,12 +294,12 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
             if !quiet {
                 println!("Pad file deleted! ")
             }
-        },
+        }
         Err(_) => {
             if !quiet {
                 println!("Failed to delete pad file!")
             }
-        },
+        }
     }
 
     // Delete encrypted file
@@ -272,12 +308,12 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
             if !quiet {
                 println!("Encrypted file deleted!")
             }
-        },
+        }
         Err(_) => {
             if !quiet {
                 println!("Failed to delete encrypted file!")
             }
-        },
+        }
     }
 }
 
@@ -300,16 +336,31 @@ pub fn decrypt_directory(directory_path: &str, secure_delete: bool) {
         }
     };
 
-    for entry in dir {
-        let entry = entry.unwrap();
-        let file_path = entry.path().to_str().unwrap().to_string();
+    let entries: Vec<_> = dir.filter_map(Result::ok).collect();
+    let entries = Arc::new(Mutex::new(entries));
 
-        // If it's a directory, decrypt it recursively
-        if entry.file_type().unwrap().is_dir() {
-            decrypt_directory(&file_path, secure_delete);
-        } else {
-            decrypt(&file_path, true, secure_delete);
-        }
+    let mut handles = vec![];
+
+    for _ in 0..NUM_THREADS {
+        // Number of threads
+        let entries = Arc::clone(&entries);
+        let handle = thread::spawn(move || {
+            while let Some(entry) = entries.lock().unwrap().pop() {
+                let file_path = entry.path().to_str().unwrap().to_string();
+
+                // If it's a directory, encrypt it recursively
+                if entry.file_type().unwrap().is_dir() {
+                    decrypt_directory(&file_path, secure_delete);
+                } else {
+                    decrypt(&file_path, true, secure_delete);
+                }
+            }
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
     }
 }
 
