@@ -72,7 +72,7 @@ pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
         match std::fs::remove_file(&path) {
             Ok(_) => {
                 if !quiet {
-                    print!("Original file deleted!")
+                    println!("Original file deleted!")
                 }
             },
             Err(_) => {
@@ -200,7 +200,7 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
     match std::fs::remove_file(&pad_path) {
         Ok(_) => {
             if !quiet {
-                print!("Pad file deleted! ")
+                println!("Pad file deleted! ")
             }
         },
         Err(_) => {
@@ -214,7 +214,7 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
     match std::fs::remove_file(&path) {
         Ok(_) => {
             if !quiet {
-                print!("Encrypted file deleted!")
+                println!("Encrypted file deleted!")
             }
         },
         Err(_) => {
