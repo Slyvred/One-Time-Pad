@@ -81,3 +81,12 @@ pub fn write_file(data: &Vec<u8>, path: &String) {
         }
     }
 }
+pub fn print_progress_bar(progress: f64, filename: &str) {
+    let bar_width = 32;
+    let pos = (bar_width as f64 * progress).round() as usize;
+    let bar: String = (0..bar_width)
+        .map(|i| if i < pos { '=' } else { ' ' })
+        .collect();
+    print!("\r[{}] {}", bar, filename);
+    std::io::stdout().flush().unwrap();
+}

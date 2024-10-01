@@ -1,8 +1,10 @@
-use crate::helpers::{get_input, write_file};
+use crate::helpers::{get_input, write_file, print_progress_bar};
 use rand::{rngs::OsRng, TryRngCore};
 use std::fs::{File, OpenOptions};
-use std::io::{BufReader, Read, Write};
+use std::io::{BufReader, Read, Seek, Write};
 use std::process::exit;
+
+const BUFFER_SIZE: u64 = 512_000;
 
 pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
     let mut path = file_path.to_string();
@@ -36,10 +38,11 @@ pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
         println!("Encrypting file...");
     }
 
-    // Read file and pad by chunks of 256 MB
-    let buffer_size = 256_000_000;
+    // Read file and pad by chunks
     let mut reader = BufReader::new(&file);
-    let mut buffer = vec![0u8; buffer_size as usize];
+    let mut buffer = vec![0u8; BUFFER_SIZE as usize];
+
+    let file_size = file.metadata().unwrap().len();
 
     loop {
         let bytes_read = reader.read(&mut buffer).unwrap();
@@ -57,12 +60,42 @@ pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
         }
 
         // Append to new file
-        let mut encrypted_file = OpenOptions::new().append(true).create(true).open(path.clone() + ".enc").unwrap();
+        let mut encrypted_file = match OpenOptions::new().append(true).create(true).open(path.clone() + ".enc") {
+            Ok(file) => file,
+            Err(_) => {
+                if !quiet {
+                    println!("Failed to create/open the file!");
+                }
+                return;
+            }
+        };
         encrypted_file.write_all(&encrypted_data).unwrap();
 
-        let mut pad_file = OpenOptions::new().append(true).create(true).open(path.clone() + ".enc.pad").unwrap();
-        pad_file.write_all(&pad).unwrap();
+        let mut pad_file = match OpenOptions::new().append(true).create(true).open(path.clone() + ".enc.pad") {
+            Ok(file) => file,
+            Err(_) => {
+                if !quiet {
+                    println!("Failed to create/open the pad file!");
+                }
+                return;
+            }
+        };
+
+        match pad_file.write_all(&pad) {
+            Ok(_) => (),
+            Err(_) => {
+                if !quiet {
+                    println!("Failed to write to the pad file!");
+                }
+                return;
+            }
+        }
+
+        print_progress_bar(reader.seek(std::io::SeekFrom::Current(0)).unwrap() as f64 / file_size as f64, &path);
     }
+
+    // Print newline
+    println!();
 
     if !quiet {
         println!("File encrypted successfully!");
@@ -154,13 +187,14 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
         println!("Decrypting file...");
     }
 
-    // Read file and pad by chunks of 256 MB
-    let buffer_size = 256_000_000;
+    // Read file and pad by chunks
     let mut reader = BufReader::new(&file);
-    let mut buffer = vec![0u8; buffer_size as usize];
+    let mut buffer = vec![0u8; BUFFER_SIZE as usize];
 
     let mut pad_reader = BufReader::new(&pad_file);
-    let mut pad_buffer = vec![0u8; buffer_size as usize];
+    let mut pad_buffer = vec![0u8; BUFFER_SIZE as usize];
+
+    let file_size = file.metadata().unwrap().len();
 
     loop {
         let bytes_read = reader.read(&mut buffer).unwrap();
@@ -178,9 +212,31 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
         // Append to new file
 
         let decrypted_file_path = path.clone().replace(".enc", "");
-        let mut decrypted_file = OpenOptions::new().append(true).create(true).open(&decrypted_file_path).unwrap();
-        decrypted_file.write_all(&decrypted_data).unwrap();
+        let mut decrypted_file = match OpenOptions::new().append(true).create(true).open(&decrypted_file_path) {
+            Ok(file) => file,
+            Err(_) => {
+                if !quiet {
+                    println!("Failed to create/open the file!");
+                }
+                return;
+            }
+        };
+
+        match decrypted_file.write_all(&decrypted_data) {
+            Ok(_) => (),
+            Err(_) => {
+                if !quiet {
+                    println!("Failed to write to the file!");
+                }
+                return;
+            }
+        }
+
+        print_progress_bar(reader.seek(std::io::SeekFrom::Current(0)).unwrap() as f64 / file_size as f64, &path);
     }
+
+    // Print newline
+    println!();
 
     if !quiet {
         println!("File decrypted successfully!");
