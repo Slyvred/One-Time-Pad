@@ -150,6 +150,16 @@ pub fn encrypt_directory(directory_path: &str, delete_original: bool) {
         }
     };
 
+    // Create a mirror of the directory to store the pad files
+/*    let pad_dir = path.clone() + ".pad";
+    match std::fs::create_dir(&pad_dir) {
+        Ok(_) => (),
+        Err(_) => {
+            println!("Failed to create pad directory!");
+            return;
+        }
+    }*/
+
     let entries: Vec<_> = dir.filter_map(Result::ok).collect();
     let entries = Arc::new(Mutex::new(entries));
 
@@ -227,7 +237,7 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
 
     loop {
         let bytes_read = reader.read(&mut buffer).unwrap();
-        pad_reader.read_exact(&mut pad_buffer).unwrap();
+        pad_reader.read(&mut pad_buffer).unwrap();
         if bytes_read == 0 {
             break;
         }
