@@ -32,7 +32,7 @@ pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
 
     // Check if there is already a pad file
     let pad_path = path.clone() + ".pad";
-    if File::open(&pad_path).is_ok() {
+    if File::open(pad_path).is_ok() {
         println!("Pad file already exists!, which means the file is likely already encrypted!");
         return;
     }
@@ -103,7 +103,7 @@ pub fn encrypt(file_path: &str, delete_original: bool, quiet: bool) {
         }
 
         print_progress_bar(
-            reader.seek(std::io::SeekFrom::Current(0)).unwrap() as f64 / file_size as f64,
+            reader.stream_position().unwrap() as f64 / file_size as f64,
             &path,
         );
     }
@@ -227,7 +227,7 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
 
     loop {
         let bytes_read = reader.read(&mut buffer).unwrap();
-        pad_reader.read(&mut pad_buffer).unwrap();
+        pad_reader.read_exact(&mut pad_buffer).unwrap();
         if bytes_read == 0 {
             break;
         }
@@ -266,7 +266,7 @@ pub fn decrypt(file_path: &str, quiet: bool, secure_delete: bool) {
         }
 
         print_progress_bar(
-            reader.seek(std::io::SeekFrom::Current(0)).unwrap() as f64 / file_size as f64,
+            reader.stream_position().unwrap() as f64 / file_size as f64,
             &path,
         );
     }

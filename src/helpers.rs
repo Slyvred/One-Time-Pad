@@ -63,7 +63,7 @@ pub fn display_menu() {
     }
 }
 
-pub fn write_file(data: &Vec<u8>, path: &String) {
+pub fn write_file(data: &[u8], path: &String) {
     // Check if the file exists / if we can open it
     let mut file = match File::create(path) {
         Ok(file) => file,
@@ -73,7 +73,7 @@ pub fn write_file(data: &Vec<u8>, path: &String) {
         }
     };
 
-    match file.write_all(&data) {
+    match file.write_all(data) {
         Ok(_) => (),
         Err(_) => {
             println!("Failed to write to the file!");
